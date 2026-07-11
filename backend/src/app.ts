@@ -25,7 +25,8 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Static folder for uploaded caste/income files
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+const uploadsPath = process.env.VERCEL ? '/tmp' : path.join(__dirname, '../uploads');
+app.use('/uploads', express.static(uploadsPath));
 
 // Main API Route
 app.use('/api', apiRouter);

@@ -3,8 +3,8 @@ import path from 'path';
 import fs from 'fs';
 
 // Ensure uploads directory exists
-const uploadDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadDir)) {
+const uploadDir = process.env.VERCEL ? '/tmp' : path.join(__dirname, '../../uploads');
+if (!fs.existsSync(uploadDir) && !process.env.VERCEL) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
