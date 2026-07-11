@@ -1,0 +1,144 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum SeedingStatus {
+  YES
+  NO
+  NOT_SURE
+}
+
+model User {
+  id                        String        @id @default(uuid())
+  email                     String        @unique
+  passwordHash              String
+  role                      Role          @default(STUDENT)
+  emailVerified             Boolean       @default(false)
+  verificationToken         String?
+  verificationTokenExpires DateTime?
+  resetToken                String?
+  resetTokenExpires         DateTime?
+  createdAt                 DateTime      @default(now())
+  updatedAt                 DateTime      @updatedAt
+  refreshTokens             RefreshToken[]
+  profile                   Profile?
+  chatMessages              ChatMessage[]
+  dbtSteps                 UserDBTStep[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Profile {
+  id                      String        @id @default(uuid())
+  userId                  String        @unique
+  user                    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Step 1: Personal
+  name                    String?
+  category                String?       // SC/ST/OBC/General
+  state                   String?
+  gender                  Gender?
+  phone                   String?
+  
+  // Step 2: Academic
+  college                 String?
+  university              String?
+  department              String?
+  course                  String?
+  yearOfStudy             Int?
+  semester                Int?
+  cgpa                    Float?
+  
+  // Step 3: Eligibility
+  familyIncome            Float?
+  casteCertificatePath    String?
+  casteCertificateName    String?
+  incomeCertificatePath   String?
+  incomeCertificateName   String?
+  priorScholarshipHistory String?
+  
+  // Step 4: Bank & DBT
+  bankName                String?
+  encryptedBankAccount    String?       // AES-256 encrypted account number
+  aadhaarHash             String?       // SHA-256 (raw_aadhaar + pepper)
+  aadhaarSeedingStatus    SeedingStatus @default(NOT_SURE)
+  
+  wizardCompleted         Boolean       @default(false)
+  currentWizardStep       Int           @default(1)
+  
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+}
+
+model Scholarship {
+  id                    String                   @id @default(uuid())
+  name                  String
+  provider              String
+  description           String
+  eligibilityCriteria   String
+  minCgpa               Float
+  maxIncome             Float
+  eligibleCategories    String[]                 // ["SC", "ST", "OBC", "General", "Any"]
+  genderEligibility     String[]                 // ["MALE", "FEMALE", "OTHER", "ANY"]
+  courseEligibility     String[]                 // ["Engineering", "Medical", "Agriculture", "Any"]
+  stateEligibility      String[]                 // ["All", "Tamil Nadu", "Bihar", etc.]
+  startDate             DateTime
+  endDate               DateTime
+  amount                Float
+  officialLink          String
+  procedure             String
+  renewalInfo           String
+  status                String                   // "Active" or "Inactive"
+  requirements          ScholarshipRequirement[]
+}
+
+model ScholarshipRequirement {
+  id            String      @id @default(uuid())
+  scholarshipId String
+  scholarship   Scholarship @relation(fields: [scholarshipId], references: [id], onDelete: Cascade)
+  documentType  String      // "Caste Certificate", "Income Certificate", "Bank Passbook", etc.
+  description   String
+}
+
+model UserDBTStep {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stepKey   String   // e.g. "net_banking_request", "maadhaar_upload", "physical_consent"
+  completed Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, stepKey])
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   // "user" or "assistant"
+  content   String
+  createdAt DateTime @default(now())
+}

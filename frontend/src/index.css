@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-govCream font-sansClean text-slate-800 selection:bg-govSaffron selection:text-govNavy;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serifDisplay tracking-tight text-govNavy;
+  }
+}
+
+/* Custom interactive animation transitions */
+.transition-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Glassmorphism utility card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Accessible focus styling */
+input:focus, select:focus, textarea:focus, button:focus-visible {
+  @apply outline-none ring-2 ring-govNavy ring-offset-2 ring-offset-govCream;
+}
